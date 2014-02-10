@@ -5,11 +5,11 @@
 #include "MyLib.h"
 
 #define RECYCLE_CODE 4096
-#define tPos 4
-#define cPos 3
-#define bPos 2
-#define rPos 1
-#define sPos 0
+#define TPOS 4
+#define CPOS 3
+#define BPOS 2
+#define RPOS 1
+#define SPOS 0
 
 void Sink(void *state, UInt code, int done) {
    printf(state, code);
@@ -35,26 +35,26 @@ int main(int argc, char **argv) {
       if (argv[i][j++] == '-') {
          for (; argv[i][j]; j++) {
             if (argv[i][j] == 't') 
-               traceFlags |= 1 << tPos; 
+               traceFlags |= 1 << TPOS; 
 
             if (argv[i][j] == 'c')
-               traceFlags |= 1 << cPos;
+               traceFlags |= 1 << CPOS;
 
             if (argv[i][j] == 'b')
-               traceFlags |= 1 << bPos;
+               traceFlags |= 1 << BPOS;
 
             if (argv[i][j] == 'r')
-               traceFlags |= 1 << rPos;
+               traceFlags |= 1 << RPOS;
 
             if (argv[i][j] == 's')
-               traceFlags |= 1 << sPos;
+               traceFlags |= 1 << SPOS;
          }
       }
       else 
          numFiles++;
    }
 
-   assert(traceFlags == 16);
+   assert(traceFlags == 8);
    assert(numFiles == 1);
 
    // put all the filenames into the |files| container
@@ -68,20 +68,14 @@ int main(int argc, char **argv) {
    void (*fp)(void *, UInt, int) = Sink; 
    for (i = 0; i < numFiles; i++) {
       LZWCmp cmp;
-      LZWCmpInit(&cmp, Sink, "Sending code %d\n", 4096, traceFlags);
-      // TODO test initial dictionary here
+      LZWCmpInit(&cmp, Sink, "Sending code %d\n", RECYCLE_CODE, traceFlags);
 
-
-      /*
       FILE *ifs = fopen(files[i], "r");
-      printf("contents in %s:\n", files[i]);
 
       char c;
       while ((c = fgetc(ifs)) != EOF)
-         fp("Sending code %d\n", c, 0); 
-      fp("Sending code %d\n", 256, 1);
-      printf("\n");
-      */
+         LZWCmpEncode(&cmp, c);
+      cmp.sink(cmp.sinkState, 256, 0);
    }
 
    return 0;
