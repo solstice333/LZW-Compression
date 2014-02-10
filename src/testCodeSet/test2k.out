@@ -1,0 +1,22 @@
+Set 0 initialized
+Set 1 initialized
+Set 2 initialized
+Current space: 1600516
+New code in set 0 at index 0
+Current space: 1600516
+New code in set 0 at index 1
+Added extended code 2
+Code 2 in set 0 has value: 41 0
+Added extended code 3
+Code 2 in set 0 has value: 41 42
+Code 3 in set 0 has value: 1 43
+Added extended code 4
+Added extended code 5
+Added extended code 6
+Code 6 in set 0 has value: 41 42 45 46 46
+Code 2 in set 0 has value: 41 42
+Current space: 1600525
+Current space: 1600520
+Current space: 1600520
+Current space: 1600520
+Current space: 1600518
