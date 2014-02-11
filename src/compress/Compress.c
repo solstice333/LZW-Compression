@@ -5,12 +5,12 @@
 #include "MyLib.h"
 
 #define RECYCLE_CODE 4096
-#define TPOS 4
-#define CPOS 3
-#define BPOS 2
-#define RPOS 1
-#define SPOS 0
 #define EOD 256
+
+// 000t cbrs
+typedef enum Pos {
+   SPOS, RPOS, BPOS, CPOS, TPOS
+} Pos;
 
 void Sink(void *state, UInt code, int done) {
    printf(state, code);

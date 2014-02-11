@@ -2,9 +2,17 @@
 #include <stdlib.h>
 
 int main() {
-   unsigned char sym = -1;
+   int *array = malloc(4*sizeof(int));
+   array[0] = 1;
+   array[1] = 2;
+   array[2] = 3;
+   array[3] = 4;
 
-   printf("EOF: %08X\n", (char signed)sym);
-   printf("EOF: %d\n", (char signed)sym);
+
+   int i = 0;
+   for (; i < 4; i++) {
+      printf("%d ", array[i]);
+   }
+
    return 0;
 }
