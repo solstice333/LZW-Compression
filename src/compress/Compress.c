@@ -74,9 +74,11 @@ int main(int argc, char **argv) {
       FILE *ifs = fopen(files[i], "r");
 
       char c;
-      while ((c = fgetc(ifs)) != EOF)
+      while (!feof(ifs)) {
+         c = fgetc(ifs);
          LZWCmpEncode(&cmp, c);
-      LZWCmpEncode(&cmp, c);
+      }
+      LZWCmpStop(&cmp);
    }
 
    return 0;

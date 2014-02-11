@@ -164,7 +164,6 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
 // TODO implement creation of new codes
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    cmp->pCode.data[cmp->pCode.size++] = sym;
-   
 
 #if DEBUG
    int i = 0;
@@ -213,12 +212,6 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
 #if DEBUG
       printf("Out of LZWCmpEncode recursive call:\n");  
 #endif
-
-
-      if (cmp->traceFlags >> CPOS & 1) { 
-         if ((char signed)sym == EOF)   // Note: this overrides code 255
-            cmp->sink(cmp->sinkState, EOD, 1);
-      }
    }
 
 
@@ -227,13 +220,12 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    printCode(GetCode(cmp->cst, cmp->curLoc->cNum));
 #endif
 
-
-
-
-   
-
    // traceFlags options
    if (cmp->traceFlags >> TPOS & 1)
       BSTPrint(cmp->root, cmp->cst);
+}
 
+void LZWCmpStop(LZWCmp *cmp) {
+   if (cmp->traceFlags >> CPOS & 1) 
+      cmp->sink(cmp->sinkState, EOD, 1);
 }
