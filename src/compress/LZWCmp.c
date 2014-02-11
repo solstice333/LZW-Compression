@@ -8,6 +8,8 @@
 #define SIZE 256
 #define SEARCH_FAILED -1
 
+#define DEBUG 0
+
 typedef enum Pos {
    SPOS, RPOS, BPOS, CPOS, TPOS
 } Pos;
@@ -163,45 +165,67 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    cmp->pCode.data[cmp->pCode.size++] = sym;
    
+
+#if DEBUG
    int i = 0;
    printf("cmp->pCode: ");
    printCode(cmp->pCode);
+#endif
 
 
    TreeNode *explore = BSTSearchCode(cmp->pCode, cmp->cst, cmp->root); 
-   printf("Search success: %d\n", explore != NULL);
 
+
+#if DEBUG
+   printf("Search success: %d\n", explore != NULL);
    printf("Current location init: ");
    printCode(GetCode(cmp->cst, cmp->curLoc->cNum));
+#endif
 
 
    if (explore) 
       cmp->curLoc = explore; 
    else {
+#if DEBUG
       printf("Extending off of ");
       printCode(GetCode(cmp->cst, cmp->curLoc->cNum));
+#endif
+
 
       cmp->maxCode = ExtendCode(cmp->cst, cmp->curLoc->cNum);  
       SetSuffix(cmp->cst, cmp->maxCode, sym); 
       BSTInsert(cmp->maxCode, cmp->cst, cmp->root);
 
 
-      if (cmp->traceFlags >> CPOS & 1) { 
-         if ((char signed)sym == EOF)   // Note: this overrides code 255
-            cmp->sink(cmp->sinkState, EOD, 1);
-         else
-            cmp->sink(cmp->sinkState, cmp->curLoc->cNum, 0);
-      }
+      if (cmp->traceFlags >> CPOS & 1)  
+         cmp->sink(cmp->sinkState, cmp->curLoc->cNum, 0);
 
       int oldsize = cmp->pCode.size;
       cmp->pCode.size = 0;
       cmp->curLoc = cmp->root;
+
+#if DEBUG
+      printf("\n\nEntering LZWCmpEncode recursively:\n");  
+#endif
+
       LZWCmpEncode(cmp, cmp->pCode.data[oldsize - 1]);
-      // cmp->pCode.data[0] = cmp->pCode.data[cmp->pCode.size - 1];
+
+#if DEBUG
+      printf("Out of LZWCmpEncode recursive call:\n");  
+#endif
+
+
+      if (cmp->traceFlags >> CPOS & 1) { 
+         if ((char signed)sym == EOF)   // Note: this overrides code 255
+            cmp->sink(cmp->sinkState, EOD, 1);
+      }
    }
 
+
+#if DEBUG
    printf("Current location final: ");
    printCode(GetCode(cmp->cst, cmp->curLoc->cNum));
+#endif
 
 
 
@@ -212,6 +236,4 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    if (cmp->traceFlags >> TPOS & 1)
       BSTPrint(cmp->root, cmp->cst);
 
-   printf("\n\n");
 }
-
