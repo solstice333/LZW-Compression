@@ -109,8 +109,8 @@ static void BSTPrint(TreeNode *root) {
 // Initialize the LZWCmp object
 void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
  int traceFlags) {
-   // TODO initialize |maxCode|, |nextInt|, |bitsUsed|, 
-   // |curLoc|, |curCode|, |pCode|, |pCodeLimit|  
+   // TODO initialize |nextInt|, |bitsUsed|, 
+   // |pCode|, |pCodeLimit|  
    cmp->recycleCode = recycleCode;
    cmp->cst = CreateCodeSet(cmp->recycleCode);
    cmp->root = BSTCreate();
@@ -120,18 +120,29 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
       NewCode(cmp->cst, i);
       cmp->root = BSTInsert(i, cmp->cst, cmp->root);
    }
-
-   cmp->maxCode = i;
+   cmp->maxCode = EOD;
    cmp->numBits = NUMBITS;
+
    cmp->sink = sink;
    cmp->sinkState = sinkState;
    cmp->traceFlags = traceFlags;
+   
+   cmp->curLoc = cmp->root;
+   cmp->curCode = GetCode(cmp->cst, cmp->curLoc->cNum);
 }
 
 // TODO implement creation of new codes
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    Code csym = {&sym, 1};
    int cNum = BSTSearchCode(csym, cmp->cst, cmp->root); 
+
+   
+
+   // create new code within code set
+    
+      
+
+
 
    if (cmp->traceFlags >> CPOS & 1) { 
       if ((char signed)sym == EOF)   // Note: this overrides code 255
