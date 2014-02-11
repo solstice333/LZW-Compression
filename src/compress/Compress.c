@@ -10,6 +10,7 @@
 #define BPOS 2
 #define RPOS 1
 #define SPOS 0
+#define EOD 256
 
 void Sink(void *state, UInt code, int done) {
    printf(state, code);
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
          numFiles++;
    }
 
-   assert(traceFlags == 8);
+   assert(traceFlags == 24 || traceFlags == 16 || traceFlags == 8);
    assert(numFiles == 1);
 
    // put all the filenames into the |files| container
@@ -75,7 +76,7 @@ int main(int argc, char **argv) {
       char c;
       while ((c = fgetc(ifs)) != EOF)
          LZWCmpEncode(&cmp, c);
-      cmp.sink(cmp.sinkState, 256, 0);
+      LZWCmpEncode(&cmp, c);
    }
 
    return 0;

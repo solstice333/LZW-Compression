@@ -9,6 +9,7 @@
 #define RPOS 1
 #define SPOS 0
 #define NUMBITS 9
+#define EOD 256
 
 // freelist contains recycled nodes
 static TreeNode *freelist = NULL;
@@ -22,10 +23,7 @@ static TreeNode *newNode() {
 
 // Abstract function to compare codes during BST insertion. Should be compared
 // lexicographically
-static int codeCmp(int cNum1, int cNum2, void *cs) {
-   Code c1 = GetCode(cs, cNum1);
-   Code c2 = GetCode(cs, cNum2);
-
+static int codeCmp(Code c1, Code c2) {
    int codeLen = c1.size;
    if (codeLen < c2.size)
       codeLen = c2.size;
@@ -41,36 +39,50 @@ static TreeNode* BSTCreate() {
 // Insert codes into BST given |code|, TreeNode root of the BST |root|, and
 // CodeSet void pointer |cs|. Note that the updated BST root |root| is 
 // returned
-static TreeNode *BSTInsert(int code, TreeNode *root, void *cs) {
+static TreeNode *BSTInsert(int cNum, void *cs, TreeNode *root) {
    if (!root) {
       root = freelist ? newNode() : malloc(sizeof(TreeNode));
-      root->cNum = code;
+      root->cNum = cNum;
       root->left = root->right = NULL;
    }
 
    else {
-      if (codeCmp(code, root->cNum, cs) < 0)
-         root->left = BSTInsert(code, root->left, cs);
+      Code rootCode = GetCode(cs, root->cNum);
+      Code insertCode = GetCode(cs, cNum);
+
+      if (codeCmp(insertCode, rootCode) < 0)
+         root->left = BSTInsert(cNum, cs, root->left);
       else
-         root->right = BSTInsert(code, root->right, cs);
+         root->right = BSTInsert(cNum, cs, root->right);
    }
 
    return root;
 }
 
-// Searches for the 
-static int BSTSearch(UChar sym, TreeNode *root, void *cs) {
+// Searches for the UChar |sym| within the BST and returns the associating
+// code number
+static int BSTSearchSym(UChar sym, TreeNode *root, void *cs) {
    if (root) {
       Code rootCode = GetCode(cs, root->cNum);
 
       if (memcmp(&sym, rootCode.data, 1) < 0) 
-         return BSTSearch(sym, root->left, cs);
+         return BSTSearchSym(sym, root->left, cs);
       else if (memcmp(&sym, rootCode.data, 1) > 0) 
-         return BSTSearch(sym, root->right, cs);
+         return BSTSearchSym(sym, root->right, cs);
       else
          return root->cNum;
    }
 }
+
+// TODO finish implementing this
+/*
+static int BSTSearchCode(Code code, TreeNode *root, void *cs) {
+   if (root) {
+      Code rootCode = GetCode(cs, root->cNum);
+
+   }
+}
+*/
 
 // Helper function for BSTPrint
 static void printBSTContents(TreeNode *root) {
@@ -99,21 +111,30 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
    int i = 0;
    for (; i < 256; i++) {
       NewCode(cmp->cst, i);
-      cmp->root = BSTInsert(i, cmp->root, cmp->cst);
+      cmp->root = BSTInsert(i, cmp->cst, cmp->root);
    }
 
-   cmp->maxCode = i - 1;
+   cmp->maxCode = i;
    cmp->numBits = NUMBITS;
    cmp->sink = sink;
    cmp->sinkState = sinkState;
    cmp->traceFlags = traceFlags;
 }
 
+// TODO implement creation of new codes
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
-   int cNum = BSTSearch(sym, cmp->root, cmp->cst); 
-   cmp->sink(cmp->sinkState, cNum, 0);
+   int cNum = BSTSearchSym(sym, cmp->root, cmp->cst); 
 
+   if (cmp->traceFlags >> CPOS & 1) { 
+      if ((char signed)sym == EOF)   // Note: this overrides code 255
+         cmp->sink(cmp->sinkState, EOD, 1);
+      else
+         cmp->sink(cmp->sinkState, cNum, 0);
+   }
 
+   if (cmp->traceFlags >> TPOS & 1)
+      BSTPrint(cmp->root);
 }
+
 
 
