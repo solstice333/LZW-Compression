@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "LZWCmp.h"
 #include "MyLib.h"
+#include "SmartAlloc.h"
 
 #define RECYCLE_CODE 4096
 #define EOD 256
@@ -38,25 +39,25 @@ int main(int argc, char **argv) {
             if (argv[i][j] == 't') 
                traceFlags |= 1 << TPOS; 
 
-            if (argv[i][j] == 'c')
+            else if (argv[i][j] == 'c')
                traceFlags |= 1 << CPOS;
 
-            if (argv[i][j] == 'b')
+            else if (argv[i][j] == 'b')
                traceFlags |= 1 << BPOS;
 
-            if (argv[i][j] == 'r')
+            else if (argv[i][j] == 'r')
                traceFlags |= 1 << RPOS;
 
-            if (argv[i][j] == 's')
+            else if (argv[i][j] == 's')
                traceFlags |= 1 << SPOS;
+
+            else
+               printf("Bad argument: %c\n", argv[i][j]);
          }
       }
       else 
          numFiles++;
    }
-
-   assert(traceFlags == 24 || traceFlags == 16 || traceFlags == 8);
-   assert(numFiles == 1);
 
    // put all the filenames into the |files| container
    char *files[numFiles]; 
@@ -89,6 +90,17 @@ int main(int argc, char **argv) {
       }
 
       LZWCmpStop(&cmp);
+
+      if (cmp.traceFlags >> SPOS & 1)
+         printf("Space after LZWCmpStop for %s: %ld\n", 
+          files[i], report_space()); 
+
+      LZWCmpDestruct(&cmp);
+      LZWCmpClearFreelist();
+
+      if (cmp.traceFlags >> SPOS & 1)
+         printf("Final space: %ld\n", report_space()); 
+
    }
 
    return 0;

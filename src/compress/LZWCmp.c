@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "LZWCmp.h"
+#include "SmartAlloc.h"
 
 #define NUMBITS 9
 #define EOD 256
@@ -201,19 +202,6 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    cmp->pCode.data[cmp->pCode.size++] = sym;
    TreeNode *explore = BSTSearchCode(cmp->pCode, cmp->cst, cmp->root); 
 
-#if DEBUG
-   printf("\n");
-   printf("cmp->pCode.data: ");
-   printCode(cmp->pCode);
-   if (explore) {
-      printf("updated location: ");
-      printCode(GetCode(cmp->cst, explore->cNum));
-   }
-   else
-      printf("hit NULL in BST, adding new code and sending prev found");
-   printf("\n");
-#endif
-
    if (explore) 
       cmp->curLoc = explore; 
    else {
@@ -255,3 +243,10 @@ void LZWCmpDestruct(LZWCmp *cmp) {
    free(cmp->pCode.data);
 }
 
+void LZWCmpClearFreelist() {
+   while (freelist) {
+      TreeNode *temp = freelist;
+      freelist = temp->right;
+      free(temp);
+   }
+}
