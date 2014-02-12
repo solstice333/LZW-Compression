@@ -5,8 +5,6 @@
 
 #define NUMBITS 9
 #define EOD 256
-#define SIZE 256
-#define SEARCH_FAILED -1
 
 #define DEBUG 0
 
@@ -48,7 +46,6 @@ static TreeNode* BSTCreate() {
 // BST |root|. Updated BST is returned
 static TreeNode *BSTInsert(int cNum, void *cs, TreeNode *root) {
    if (!root) {
-      // TODO make sure to free this later
       root = freelist ? newNode() : malloc(sizeof(TreeNode));
       root->cNum = cNum;
       root->left = root->right = NULL;
@@ -84,7 +81,7 @@ static int BSTSearchSym(UChar sym, TreeNode *root, void *cs) {
 }
 
 // Searches for Code |code| within the BST TreeNode |*root| and given CodeSet |*cs|.
-// Returns SEARCH_FAILED if code is not found
+// Returns NULL if code is not found
 static TreeNode *BSTSearchCode(Code code, void *cs, TreeNode *root) {
    if (root) {
       Code rootCode = GetCode(cs, root->cNum);
@@ -97,6 +94,18 @@ static TreeNode *BSTSearchCode(Code code, void *cs, TreeNode *root) {
          return root;
    }
    return NULL;
+}
+
+// Destroys the BST and sends the nodes to the freelist
+static void BSTDestroy(TreeNode *root) {
+   if (root) {
+      BSTDestroy(root->left);
+      BSTDestroy(root->right);
+      
+      root->right = freelist;
+      root->left = NULL;
+      freelist = root;
+   }
 }
 
 // Helper function for BSTPrint
@@ -132,6 +141,24 @@ static void printCode(Code c) {
    printf("\n");
 }
 
+// TODO come back here to implement this
+static void dictionaryReset(LZWCmp *cmp) {
+   LZWCmpDestruct(cmp);
+   LZWCmpInit(cmp, cmp->sink, cmp->sinkState, cmp->recycleCode, 
+    cmp->traceFlags);
+}
+
+// regex check for anything that has |10 255| within the code data
+static int isDone(LZWCmp *cmp) {
+   UChar data[] = { 10, 255 };
+
+   int i = 0;
+   for (; i < cmp->pCode.size - 1; i++) 
+      if (data[0] == cmp->pCode.data[i] && data[1] == cmp->pCode.data[i + 1])
+            return 1;
+   return 0;
+}
+
 // Initialize the LZWCmp object
 void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
  int traceFlags) {
@@ -163,69 +190,43 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
 
 // TODO implement creation of new codes
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
+   if (cmp->maxCode == cmp->recycleCode - 1) 
+      dictionaryReset(cmp);
+
    cmp->pCode.data[cmp->pCode.size++] = sym;
-
-#if DEBUG
-   int i = 0;
-   printf("cmp->pCode: ");
-   printCode(cmp->pCode);
-#endif
-
-
    TreeNode *explore = BSTSearchCode(cmp->pCode, cmp->cst, cmp->root); 
-
-
-#if DEBUG
-   printf("Search success: %d\n", explore != NULL);
-   printf("Current location init: ");
-   printCode(GetCode(cmp->cst, cmp->curLoc->cNum));
-#endif
-
 
    if (explore) 
       cmp->curLoc = explore; 
    else {
-#if DEBUG
-      printf("Extending off of ");
-      printCode(GetCode(cmp->cst, cmp->curLoc->cNum));
-#endif
-
-
-      cmp->maxCode = ExtendCode(cmp->cst, cmp->curLoc->cNum);  
-      SetSuffix(cmp->cst, cmp->maxCode, sym); 
-      BSTInsert(cmp->maxCode, cmp->cst, cmp->root);
-
+      if (!isDone(cmp)) {
+         cmp->maxCode = ExtendCode(cmp->cst, cmp->curLoc->cNum);  
+         SetSuffix(cmp->cst, cmp->maxCode, sym); 
+         BSTInsert(cmp->maxCode, cmp->cst, cmp->root);
+      }
 
       if (cmp->traceFlags >> CPOS & 1)  
          cmp->sink(cmp->sinkState, cmp->curLoc->cNum, 0);
+      if (cmp->traceFlags >> TPOS & 1) 
+         BSTPrint(cmp->root, cmp->cst);
 
       int oldsize = cmp->pCode.size;
       cmp->pCode.size = 0;
       cmp->curLoc = cmp->root;
-
-#if DEBUG
-      printf("\n\nEntering LZWCmpEncode recursively:\n");  
-#endif
-
       LZWCmpEncode(cmp, cmp->pCode.data[oldsize - 1]);
-
-#if DEBUG
-      printf("Out of LZWCmpEncode recursive call:\n");  
-#endif
    }
-
-
-#if DEBUG
-   printf("Current location final: ");
-   printCode(GetCode(cmp->cst, cmp->curLoc->cNum));
-#endif
-
-   // traceFlags options
-   if (cmp->traceFlags >> TPOS & 1)
-      BSTPrint(cmp->root, cmp->cst);
 }
 
 void LZWCmpStop(LZWCmp *cmp) {
    if (cmp->traceFlags >> CPOS & 1) 
       cmp->sink(cmp->sinkState, EOD, 1);
+   if (cmp->traceFlags >> TPOS & 1)
+      BSTPrint(cmp->root, cmp->cst);
 }
+
+void LZWCmpDestruct(LZWCmp *cmp) {
+   DestroyCodeSet(cmp->cst);
+   BSTDestroy(cmp->root);
+   free(cmp->pCode.data);
+}
+
