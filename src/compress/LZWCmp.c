@@ -141,21 +141,20 @@ static void printCode(Code c) {
    printf("\n");
 }
 
-// TODO come back here to implement this
 static void dictionaryReset(LZWCmp *cmp) {
    LZWCmpDestruct(cmp);
    LZWCmpInit(cmp, cmp->sink, cmp->sinkState, cmp->recycleCode, 
     cmp->traceFlags);
 }
 
-// regex check for anything that has |10 255| within the code data
+// regex check for anything that has |*10 255*| within the code data
 static int isDone(LZWCmp *cmp) {
    UChar data[] = { 10, 255 };
 
    int i = 0;
    for (; i < cmp->pCode.size - 1; i++) 
       if (data[0] == cmp->pCode.data[i] && data[1] == cmp->pCode.data[i + 1])
-            return 1;
+         return 1;
    return 0;
 }
 
@@ -188,7 +187,7 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
    cmp->pCode.size = 0;
 }
 
-// TODO implement creation of new codes
+// TODO debug this
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    if (cmp->maxCode == cmp->recycleCode) 
       dictionaryReset(cmp);

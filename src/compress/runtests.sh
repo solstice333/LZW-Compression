@@ -1,10 +1,10 @@
 #!/bin/bash
 
-test1=true
+test1=false
 test2=true
-test3=true
-test4=true
-test5=true
+test3=false
+test4=false
+test5=false
 
 if $test1; then 
    ./a.out -ct test1.in > test1k.out
@@ -14,8 +14,8 @@ if $test1; then
 fi
 
 if $test2; then 
-   ./a.out -c test2.in > test2k.out
-   ./Compress -c test2.in > test2.out
+   ./a.out -ct test2.in > test2k.out
+   ./Compress -ct test2.in > test2.out
    echo -e "TEST2\n"
    diff -bw test2k.out test2.out
 fi
