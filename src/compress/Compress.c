@@ -76,18 +76,16 @@ int main(int argc, char **argv) {
       
       // The following block checks ahead to see if the feof indicator
       // has been set since we don't want stuff like |10 255| to be added
-      // to the dictionary at the EOF. If feof has not been set, return 
-      // to old pos, and send the character to Encoder
-      fpos_t currPos;
+      // to the dictionary at the EOF (where 255 is -1 which is EOF). 
+      // If feof has not been set, return to old pos, and 
+      // send the character to Encoder
+      char c = 0;
       LZWCmpEncode(&cmp, fgetc(ifs));
-      fgetpos(ifs, &currPos); 
-      fgetc(ifs);
+      c = fgetc(ifs);
 
       while (!feof(ifs)) {
-         fsetpos(ifs, &currPos);
-         LZWCmpEncode(&cmp, fgetc(ifs));
-         fgetpos(ifs, &currPos); 
-         fgetc(ifs);
+         LZWCmpEncode(&cmp, c);
+         c = fgetc(ifs);
       }
 
       LZWCmpStop(&cmp);
