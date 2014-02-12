@@ -164,7 +164,7 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
  int traceFlags) {
    // TODO initialize |nextInt|, |bitsUsed| 
    cmp->recycleCode = recycleCode;
-   cmp->cst = CreateCodeSet(cmp->recycleCode);
+   cmp->cst = CreateCodeSet(cmp->recycleCode + 1);
    cmp->root = BSTCreate();
 
    int i = 0;
@@ -190,7 +190,7 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
 
 // TODO implement creation of new codes
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
-   if (cmp->maxCode == cmp->recycleCode - 1) 
+   if (cmp->maxCode == cmp->recycleCode) 
       dictionaryReset(cmp);
 
    cmp->pCode.data[cmp->pCode.size++] = sym;
