@@ -141,21 +141,27 @@ static void printCode(Code c) {
    printf("\n");
 }
 
+// Helper function for resetting the dictionary
 static void dictionaryReset(LZWCmp *cmp) {
    LZWCmpDestruct(cmp);
    LZWCmpInit(cmp, cmp->sink, cmp->sinkState, cmp->recycleCode, 
     cmp->traceFlags);
 }
 
-// regex check for anything that has |*10 255*| within the code data
-static int isDone(LZWCmp *cmp) {
-   UChar data[] = { 10, 255 };
-
+// helper function for findMatchingPattern - checks for matching patterns given
+// |data| which contains the pattern you want to find within cmp->pCode.data
+static int regexCheck(UChar data[], LZWCmp *cmp) {
    int i = 0;
    for (; i < cmp->pCode.size - 1; i++) 
       if (data[0] == cmp->pCode.data[i] && data[1] == cmp->pCode.data[i + 1])
          return 1;
    return 0;
+}
+
+// finds the matching pattern in cmp->pCode.data
+static int findMatchingPattern(LZWCmp *cmp) {
+   UChar data1[] = { 10, 255 };
+   return regexCheck(data1, cmp);
 }
 
 // Initialize the LZWCmp object
@@ -195,14 +201,25 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    cmp->pCode.data[cmp->pCode.size++] = sym;
    TreeNode *explore = BSTSearchCode(cmp->pCode, cmp->cst, cmp->root); 
 
+#if DEBUG
+   printf("\n");
+   printf("cmp->pCode.data: ");
+   printCode(cmp->pCode);
+   if (explore) {
+      printf("updated location: ");
+      printCode(GetCode(cmp->cst, explore->cNum));
+   }
+   else
+      printf("hit NULL in BST, adding new code and sending prev found");
+   printf("\n");
+#endif
+
    if (explore) 
       cmp->curLoc = explore; 
    else {
-      if (!isDone(cmp)) {
-         cmp->maxCode = ExtendCode(cmp->cst, cmp->curLoc->cNum);  
-         SetSuffix(cmp->cst, cmp->maxCode, sym); 
-         BSTInsert(cmp->maxCode, cmp->cst, cmp->root);
-      }
+      cmp->maxCode = ExtendCode(cmp->cst, cmp->curLoc->cNum);  
+      SetSuffix(cmp->cst, cmp->maxCode, sym); 
+      BSTInsert(cmp->maxCode, cmp->cst, cmp->root);
 
       if (cmp->traceFlags >> CPOS & 1)  
          cmp->sink(cmp->sinkState, cmp->curLoc->cNum, 0);
@@ -217,9 +234,18 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
 }
 
 void LZWCmpStop(LZWCmp *cmp) {
+   if (cmp->maxCode > EOD) {
+      if (cmp->traceFlags >> CPOS & 1) 
+         cmp->sink(cmp->sinkState, cmp->curLoc->cNum, 1);
+
+      if (cmp->traceFlags >> TPOS & 1) 
+         BSTPrint(cmp->root, cmp->cst);
+   }
+
    if (cmp->traceFlags >> CPOS & 1) 
       cmp->sink(cmp->sinkState, EOD, 1);
-   if (cmp->traceFlags >> TPOS & 1)
+
+   if (cmp->traceFlags >> TPOS & 1) 
       BSTPrint(cmp->root, cmp->cst);
 }
 

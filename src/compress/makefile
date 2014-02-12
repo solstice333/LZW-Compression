@@ -2,6 +2,7 @@ CC=gcc
 FILES=CodeSet.c LZWCmp.c SmartAlloc.c Compress.c
 OBJ=CodeSet.o LZWCmp.o SmartAlloc.o Compress.o
 OUT=a.out
+TESTS=test*.out
 
 all: build
 
@@ -21,6 +22,6 @@ Compress.o: Compress.c
 	$(CC) -c Compress.c
 
 clean: 
-	rm -rf $(OBJ) $(OUT)
+	rm -rf $(OBJ) $(OUT) $(TESTS)
 
 rebuild: clean build

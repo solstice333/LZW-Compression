@@ -73,11 +73,23 @@ int main(int argc, char **argv) {
 
       FILE *ifs = fopen(files[i], "r");
 
-      char c;
+      
+      // The following block checks ahead to see if the feof indicator
+      // has been set since we don't want stuff like |10 255| to be added
+      // to the dictionary at the EOF. If feof has not been set, return 
+      // to old pos, and send the character to Encoder
+      fpos_t currPos;
+      LZWCmpEncode(&cmp, fgetc(ifs));
+      fgetpos(ifs, &currPos); 
+      fgetc(ifs);
+
       while (!feof(ifs)) {
-         c = fgetc(ifs);
-         LZWCmpEncode(&cmp, c);
+         fsetpos(ifs, &currPos);
+         LZWCmpEncode(&cmp, fgetc(ifs));
+         fgetpos(ifs, &currPos); 
+         fgetc(ifs);
       }
+
       LZWCmpStop(&cmp);
    }
 

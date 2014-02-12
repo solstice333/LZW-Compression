@@ -1,12 +1,9 @@
 #!/bin/bash
 
-test1=false
+otherTests=true
 test2=true
-test3=false
-test4=false
-test5=false
 
-if $test1; then 
+if $otherTests; then 
    ./a.out -ct test1.in > test1k.out
    ./Compress -ct test1.in > test1.out
    echo -e "TEST1\n"
@@ -20,21 +17,21 @@ if $test2; then
    diff -bw test2k.out test2.out
 fi
 
-if $test3; then 
+if $otherTests; then 
    ./a.out -ct test3.in > test3k.out
    ./Compress -ct test3.in > test3.out
    echo -e "TEST3\n"
    diff -bw test3k.out test3.out
 fi
 
-if $test4; then 
+if $otherTests; then 
    ./a.out -ct test4.in > test4k.out
    ./Compress -ct test4.in > test4.out
    echo -e "TEST4\n"
    diff -bw test4k.out test4.out
 fi
 
-if $test5; then 
+if $otherTests; then 
    ./a.out -ct test5.in > test5k.out
    ./Compress -ct test5.in > test5.out
    echo -e "TEST5\n"
