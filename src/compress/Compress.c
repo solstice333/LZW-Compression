@@ -10,8 +10,7 @@
 #define EOD 256
 #define NEWLINE 8
 #define OUTPUT_SIZE 128
-#define OUTPUT_EXT ".k.Z"
-
+#define OUTPUT_EXT ".kZ"
 
 // 000t cbrs
 typedef enum Pos {
@@ -22,13 +21,15 @@ typedef enum Pos {
 void Sink(void *state, UInt code, int done) {
    static int occur = 0;
 
-   if (occur == NEWLINE) {
-      fprintf(state, "\n");
+   if (occur == NEWLINE - 1) {
+      fprintf(state, "%08X\n", code);
       occur = 0;
    }
-   ++occur;
+   else {
+      fprintf(state, "%08X ", code);
+      ++occur;
+   }
 
-   fprintf(state, "%08X ", code);
    if (done) {
       fprintf(state, "\n");
       fclose(state);
@@ -96,6 +97,7 @@ int main(int argc, char **argv) {
       strcat(output, OUTPUT_EXT);
       FILE *state = fopen(output, "w");    
 
+      // intiialize LZWcmp object and open input stream
       LZWCmpInit(&cmp, Sink, state, RECYCLE_CODE, traceFlags);
       FILE *ifs = fopen(files[i], "r");
       

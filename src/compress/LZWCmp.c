@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "LZWCmp.h"
 #include "SmartAlloc.h"
@@ -169,6 +170,19 @@ static void packBits(LZWCmp *cmp, int done) {
       cmp->sink(cmp->sinkState, cmp->nextInt, done);
 }
 
+// Used for reallocating cmp->pCode.data since realloc 
+// doesn't work with smartalloc
+static void reallocPcode(LZWCmp *cmp) {
+   char *temp = cmp->pCode.data;
+   int oldsize = cmp->pCodeLimit;
+   
+   cmp->pCodeLimit = cmp->pCodeLimit + ALLOC_PCODE;
+   cmp->pCode.data = malloc(cmp->pCodeLimit * sizeof(char));
+   memmove(cmp->pCode.data, temp, oldsize); 
+
+   free(temp);
+}
+
 // Initialize the LZWCmp object
 void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
  int traceFlags) {
@@ -204,7 +218,10 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    if (cmp->maxCode == cmp->recycleCode) 
       dictionaryReset(cmp);
 
+   if (cmp->pCode.size == cmp->pCodeLimit)
+      reallocPcode(cmp);
    cmp->pCode.data[cmp->pCode.size++] = sym;
+
    TreeNode *explore = BSTSearchCode(cmp->pCode, cmp->cst, cmp->root); 
 
    if (explore) 

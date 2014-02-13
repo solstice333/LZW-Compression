@@ -1,18 +1,20 @@
 #!/bin/bash
 
-teststdout1=true
-teststdout2=true
-teststdout3=true
-teststdout4=true
-teststdout5=true
+teststdout1=false
+teststdout2=false
+teststdout3=false
+teststdout4=false
+teststdout5=false
+teststdout6=false
 
-testpack1=true
-testpack2=true
-testpack3=true
-testpack4=true
-testpack5=true
+testpack1=false
+testpack2=false
+testpack3=false
+testpack4=false
+testpack5=false
+testpack6=false
 
-testspace=false
+testspace=true
 
 if $teststdout1; then 
    ./a.out -ct test1.in > test1k.out
@@ -49,6 +51,13 @@ if $teststdout5; then
    diff -bw test5k.out test5.out
 fi
 
+if $teststdout6; then 
+   ./a.out -ct test6.in > test6k.out
+   ./Compress -ct test6.in > test6.out
+   echo -e "TEST6\n"
+   diff -bw test6k.out test6.out
+fi
+
 if $testpack1; then 
    ./a.out test1.in 
    ./Compress test1.in
@@ -82,6 +91,13 @@ if $testpack5; then
    ./Compress test5.in
    echo -e "TEST5\n"
    diff -bw test5.in.k.Z test5.in.Z
+fi
+
+if $testpack6; then 
+   ./a.out test6.in 
+   ./Compress test6.in
+   echo -e "TEST6\n"
+   diff -bw test6.in.k.Z test6.in.Z
 fi
 
 if $testspace; then 
