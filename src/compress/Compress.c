@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "LZWCmp.h"
 #include "MyLib.h"
@@ -7,14 +8,31 @@
 
 #define RECYCLE_CODE 4096
 #define EOD 256
+#define NEWLINE 8
+#define OUTPUT_SIZE 128
+#define OUTPUT_EXT ".k.Z"
+
 
 // 000t cbrs
 typedef enum Pos {
    SPOS, RPOS, BPOS, CPOS, TPOS
 } Pos;
 
+// data sink writes out to file and does pretty printing
 void Sink(void *state, UInt code, int done) {
-   printf(state, code);
+   static int occur = 0;
+
+   if (occur == NEWLINE) {
+      fprintf(state, "\n");
+      occur = 0;
+   }
+   ++occur;
+
+   fprintf(state, "%08X ", code);
+   if (done) {
+      fprintf(state, "\n");
+      fclose(state);
+   }
 }
 
 int main(int argc, char **argv) {
@@ -68,22 +86,27 @@ int main(int argc, char **argv) {
 
    // begin compressing each file and verbose output based on flag set
    void (*fp)(void *, UInt, int) = Sink; 
+
    for (i = 0; i < numFiles; i++) {
       LZWCmp cmp;
-      LZWCmpInit(&cmp, Sink, "Sending code %d\n", RECYCLE_CODE, traceFlags);
 
+      // set up output stream 
+      char output[OUTPUT_SIZE];
+      strcpy(output, files[i]);
+      strcat(output, OUTPUT_EXT);
+      FILE *state = fopen(output, "w");    
+
+      LZWCmpInit(&cmp, Sink, state, RECYCLE_CODE, traceFlags);
       FILE *ifs = fopen(files[i], "r");
-
       
       // The following block checks ahead to see if the feof indicator
       // has been set since we don't want stuff like |10 255| to be added
-      // to the dictionary at the EOF (where 255 is -1 which is EOF). 
+      // to the dictionary at the EOF (where 255 is unsigned EOF). 
       // If feof has not been set, return to old pos, and 
       // send the character to Encoder
       char c = 0;
       LZWCmpEncode(&cmp, fgetc(ifs));
       c = fgetc(ifs);
-
       while (!feof(ifs)) {
          LZWCmpEncode(&cmp, c);
          c = fgetc(ifs);
@@ -101,6 +124,7 @@ int main(int argc, char **argv) {
       if (cmp.traceFlags >> SPOS & 1)
          printf("Final space: %ld\n", report_space()); 
 
+      fclose(ifs);
    }
 
    return 0;

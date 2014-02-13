@@ -4,8 +4,10 @@
 #include "LZWCmp.h"
 #include "SmartAlloc.h"
 
-#define NUMBITS 9
+#define INIT_NUMBITS 9
 #define EOD 256
+#define MAXBITS 32
+#define ALLOC_PCODE 1024
 
 #define DEBUG 0
 
@@ -63,22 +65,6 @@ static TreeNode *BSTInsert(int cNum, void *cs, TreeNode *root) {
    }
 
    return root;
-}
-
-// Searches for the UChar |sym| within the BST and returns the associating
-// code number
-// **Deprecated** - Use BSTSearchCode
-static int BSTSearchSym(UChar sym, TreeNode *root, void *cs) {
-   if (root) {
-      Code rootCode = GetCode(cs, root->cNum);
-
-      if (memcmp(&sym, rootCode.data, 1) < 0) 
-         return BSTSearchSym(sym, root->left, cs);
-      else if (memcmp(&sym, rootCode.data, 1) > 0) 
-         return BSTSearchSym(sym, root->right, cs);
-      else
-         return root->cNum;
-   }
 }
 
 // Searches for Code |code| within the BST TreeNode |*root| and given CodeSet |*cs|.
@@ -144,31 +130,48 @@ static void printCode(Code c) {
 
 // Helper function for resetting the dictionary
 static void dictionaryReset(LZWCmp *cmp) {
+   int saveNextInt = cmp->nextInt, saveBitsUsed = cmp->bitsUsed;
+
+   DestroyCodeSet(cmp->cst);
    LZWCmpDestruct(cmp);
    LZWCmpInit(cmp, cmp->sink, cmp->sinkState, cmp->recycleCode, 
     cmp->traceFlags);
+
+   cmp->nextInt = saveNextInt;
+   cmp->bitsUsed = saveBitsUsed;
 }
 
-// helper function for findMatchingPattern - checks for matching patterns given
-// |data| which contains the pattern you want to find within cmp->pCode.data
-static int regexCheck(UChar data[], LZWCmp *cmp) {
-   int i = 0;
-   for (; i < cmp->pCode.size - 1; i++) 
-      if (data[0] == cmp->pCode.data[i] && data[1] == cmp->pCode.data[i + 1])
-         return 1;
-   return 0;
+// handles trace flag options. LZWCmp |*cmp| is needed for printing the BST,
+// and int |cNum| is the code sent to the sink
+static void traceFlagHandler(LZWCmp *cmp, int cNum) {
+   if (cmp->traceFlags >> CPOS & 1)  
+      printf("Sending code %d\n", cNum);
+   if (cmp->traceFlags >> TPOS & 1) 
+      BSTPrint(cmp->root, cmp->cst);
 }
 
-// finds the matching pattern in cmp->pCode.data
-static int findMatchingPattern(LZWCmp *cmp) {
-   UChar data1[] = { 10, 255 };
-   return regexCheck(data1, cmp);
+// pack those bits into integers and send to sink
+static void packBits(LZWCmp *cmp, int done) {
+   int cNum = done ? EOD : cmp->curLoc->cNum;
+
+   cmp->bitsUsed += cmp->numBits;
+   if (cmp->bitsUsed > MAXBITS) {
+      cmp->bitsUsed -= MAXBITS;
+      cmp->nextInt |= cNum >> cmp->bitsUsed;
+      cmp->sink(cmp->sinkState, cmp->nextInt, 0);
+      cmp->nextInt = 0;
+   }
+   cmp->nextInt |= cNum << MAXBITS - cmp->bitsUsed;
+
+   if (cmp->maxCode == 1 << cmp->numBits)
+      ++cmp->numBits;
+   if (done)
+      cmp->sink(cmp->sinkState, cmp->nextInt, done);
 }
 
 // Initialize the LZWCmp object
 void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
  int traceFlags) {
-   // TODO initialize |nextInt|, |bitsUsed| 
    cmp->recycleCode = recycleCode;
    cmp->cst = CreateCodeSet(cmp->recycleCode + 1);
    cmp->root = BSTCreate();
@@ -178,7 +181,7 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
       NewCode(cmp->cst, i);
       cmp->root = BSTInsert(i, cmp->cst, cmp->root);
    }
-   cmp->numBits = NUMBITS;
+   cmp->numBits = INIT_NUMBITS;
    NewCode(cmp->cst, 0);
    cmp->maxCode = EOD;
 
@@ -189,12 +192,14 @@ void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
    cmp->curLoc = cmp->root;
    cmp->curCode = GetCode(cmp->cst, cmp->curLoc->cNum);
 
-   cmp->pCodeLimit = EOD*2;
+   cmp->pCodeLimit = ALLOC_PCODE;
    cmp->pCode.data = malloc(cmp->pCodeLimit * sizeof(char));
    cmp->pCode.size = 0;
+
+   cmp->nextInt = 0;
+   cmp->bitsUsed = 0;
 }
 
-// TODO debug this
 void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
    if (cmp->maxCode == cmp->recycleCode) 
       dictionaryReset(cmp);
@@ -208,11 +213,9 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
       cmp->maxCode = ExtendCode(cmp->cst, cmp->curLoc->cNum);  
       SetSuffix(cmp->cst, cmp->maxCode, sym); 
       BSTInsert(cmp->maxCode, cmp->cst, cmp->root);
+      traceFlagHandler(cmp, cmp->curLoc->cNum);
 
-      if (cmp->traceFlags >> CPOS & 1)  
-         cmp->sink(cmp->sinkState, cmp->curLoc->cNum, 0);
-      if (cmp->traceFlags >> TPOS & 1) 
-         BSTPrint(cmp->root, cmp->cst);
+      packBits(cmp, 0);
 
       int oldsize = cmp->pCode.size;
       cmp->pCode.size = 0;
@@ -223,22 +226,16 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
 
 void LZWCmpStop(LZWCmp *cmp) {
    if (cmp->maxCode > EOD) {
-      if (cmp->traceFlags >> CPOS & 1) 
-         cmp->sink(cmp->sinkState, cmp->curLoc->cNum, 1);
-
-      if (cmp->traceFlags >> TPOS & 1) 
-         BSTPrint(cmp->root, cmp->cst);
+      traceFlagHandler(cmp, cmp->curLoc->cNum);
+      packBits(cmp, 0);
    }
+   traceFlagHandler(cmp, EOD);
+   packBits(cmp, 1);
 
-   if (cmp->traceFlags >> CPOS & 1) 
-      cmp->sink(cmp->sinkState, EOD, 1);
-
-   if (cmp->traceFlags >> TPOS & 1) 
-      BSTPrint(cmp->root, cmp->cst);
+   DestroyCodeSet(cmp->cst);
 }
 
 void LZWCmpDestruct(LZWCmp *cmp) {
-   DestroyCodeSet(cmp->cst);
    BSTDestroy(cmp->root);
    free(cmp->pCode.data);
 }

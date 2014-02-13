@@ -2,12 +2,13 @@ CC=gcc
 FILES=CodeSet.c LZWCmp.c SmartAlloc.c Compress.c
 OBJ=CodeSet.o LZWCmp.o SmartAlloc.o Compress.o
 OUT=a.out
-TESTS=test*.out
+FLAGS=-g
+TESTS=test*.out test*.in.k.Z test*.in.Z
 
 all: build
 
 build: $(OBJ)
-	$(CC) $(OBJ)
+	$(CC) $(FLAGS) $(OBJ)
 
 CodeSet.o: CodeSet.c
 	$(CC) -c CodeSet.c
