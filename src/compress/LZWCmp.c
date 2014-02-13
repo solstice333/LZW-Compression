@@ -6,6 +6,7 @@
 #include "SmartAlloc.h"
 
 #define INIT_NUMBITS 9
+#define MAX_NUMBITS 12 // this can be automated with a log
 #define EOD 256
 #define MAXBITS 32
 #define ALLOC_PCODE 1024
@@ -133,6 +134,9 @@ static void printCode(Code c) {
 static void dictionaryReset(LZWCmp *cmp) {
    int saveNextInt = cmp->nextInt, saveBitsUsed = cmp->bitsUsed;
 
+   if (cmp->traceFlags >> RPOS & 1)
+      printf("Recycling dictionary...\n");
+
    DestroyCodeSet(cmp->cst);
    LZWCmpDestruct(cmp);
    LZWCmpInit(cmp, cmp->sink, cmp->sinkState, cmp->recycleCode, 
@@ -142,8 +146,8 @@ static void dictionaryReset(LZWCmp *cmp) {
    cmp->bitsUsed = saveBitsUsed;
 }
 
-// handles trace flag options. LZWCmp |*cmp| is needed for printing the BST,
-// and int |cNum| is the code sent to the sink
+// handles most frequent trace flag options. LZWCmp |*cmp| is needed for 
+// printing the BST and int |cNum| is the code sent to the sink
 static void traceFlagHandler(LZWCmp *cmp, int cNum) {
    if (cmp->traceFlags >> CPOS & 1)  
       printf("Sending code %d\n", cNum);
@@ -164,8 +168,10 @@ static void packBits(LZWCmp *cmp, int done) {
    }
    cmp->nextInt |= cNum << MAXBITS - cmp->bitsUsed;
 
-   if (cmp->maxCode == 1 << cmp->numBits)
-      ++cmp->numBits;
+   if (cmp->maxCode == 1 << cmp->numBits && cmp->numBits != MAX_NUMBITS) {
+      if (cmp->traceFlags >> BPOS & 1)
+         printf("Bump numBits to %d\n", ++cmp->numBits);
+   }
    if (done)
       cmp->sink(cmp->sinkState, cmp->nextInt, done);
 }
