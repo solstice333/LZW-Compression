@@ -6,7 +6,7 @@
 #include "SmartAlloc.h"
 
 #define INIT_NUMBITS 9
-#define MAX_NUMBITS 12 // this can be automated with a log
+#define MAX_NUMBITS 13 // this can be automated with a log
 #define EOD 256
 #define MAXBITS 32
 #define ALLOC_PCODE 1024
@@ -168,10 +168,13 @@ static void packBits(LZWCmp *cmp, int done) {
    }
    cmp->nextInt |= cNum << MAXBITS - cmp->bitsUsed;
 
-   if (cmp->maxCode == 1 << cmp->numBits && cmp->numBits != MAX_NUMBITS) {
-      if (cmp->traceFlags >> BPOS & 1)
-         printf("Bump numBits to %d\n", ++cmp->numBits);
+   if (cmp->maxCode == 1 << cmp->numBits) {
+      ++cmp->numBits;
+
+      if (cmp->traceFlags >> BPOS & 1 && cmp->numBits != MAX_NUMBITS)
+         printf("Bump numBits to %d\n", cmp->numBits);
    }
+
    if (done)
       cmp->sink(cmp->sinkState, cmp->nextInt, done);
 }
