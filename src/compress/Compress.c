@@ -9,7 +9,7 @@
 #define RECYCLE_CODE 4096
 #define EOD 256
 #define NEWLINE 8
-#define OUTPUT_SIZE 128
+#define OUTPUT_EXT_SIZE 3
 #define OUTPUT_EXT ".K"
 
 // 000t cbrs
@@ -37,14 +37,6 @@ void Sink(void *state, UInt code, int done) {
 }
 
 int main(int argc, char **argv) {
-   /*
-   t = dump contents of BST
-   c = show individual codes
-   b = announce each increase in bits per code as it occurs
-   r = announce each dictionary recycle as it occurs
-   s = announce space used after each file is compressed, and after all
-    files are compressed and the freelist is cleared
-   */
    int numFiles = -1;
    char traceFlags = 0; // 000t cbrs
 
@@ -92,7 +84,8 @@ int main(int argc, char **argv) {
       LZWCmp cmp;
 
       // set up output stream 
-      char output[OUTPUT_SIZE];
+      int num = strlen(files[i]) + OUTPUT_EXT_SIZE;
+      char *output = malloc(num*sizeof(char));
       strcpy(output, files[i]);
       strcat(output, OUTPUT_EXT);
       FILE *state = fopen(output, "w");    
@@ -122,11 +115,11 @@ int main(int argc, char **argv) {
 
       LZWCmpDestruct(&cmp);
       LZWCmpClearFreelist();
+      fclose(ifs);
+      free(output);
 
       if (cmp.traceFlags >> SPOS & 1)
          printf("Final space: %ld\n", report_space()); 
-
-      fclose(ifs);
    }
 
    return 0;

@@ -6,7 +6,7 @@
 #include "SmartAlloc.h"
 
 #define INIT_NUMBITS 9
-#define MAX_NUMBITS 13 // this can be automated with a log
+#define MAX_NUMBITS 13 // log automation?
 #define EOD 256
 #define MAXBITS 32
 #define ALLOC_PCODE 1024
@@ -20,7 +20,7 @@ typedef enum Pos {
 // freelist contains recycled nodes
 static TreeNode *freelist = NULL;
 
-// newNode() subsitutes malloc if recycled nodes exist in the freelist
+// Subsitutes malloc if recycled nodes exist in the freelist
 static TreeNode *newNode() {
    TreeNode *node = freelist;
    freelist = freelist->right;
@@ -42,7 +42,7 @@ static int codeCmp(Code c1, Code c2) {
    return rtn;
 }
 
-// Abstract function to create BST
+// Abstract function to create inital BST
 static TreeNode* BSTCreate() {
    return NULL;
 }
@@ -69,8 +69,8 @@ static TreeNode *BSTInsert(int cNum, void *cs, TreeNode *root) {
    return root;
 }
 
-// Searches for Code |code| within the BST TreeNode |*root| and given CodeSet |*cs|.
-// Returns NULL if code is not found
+// Searches for Code |code| within the BST TreeNode |*root| matching the 
+// given CodeSet |*cs|. Returns NULL if code is not found
 static TreeNode *BSTSearchCode(Code code, void *cs, TreeNode *root) {
    if (root) {
       Code rootCode = GetCode(cs, root->cNum);
@@ -130,6 +130,15 @@ static void printCode(Code c) {
    printf("\n");
 }
 
+// Destroys char *data inside Code objects
+static void destroyCodeData(LZWCmp *cmp) {
+   int i = 0; 
+   for (; i <= cmp->maxCode; i++) {
+      Code c = GetCode(cmp->cst, i);
+      free(c.data);
+   }
+}
+
 // Helper function for resetting the dictionary
 static void dictionaryReset(LZWCmp *cmp) {
    int saveNextInt = cmp->nextInt, saveBitsUsed = cmp->bitsUsed;
@@ -137,7 +146,7 @@ static void dictionaryReset(LZWCmp *cmp) {
    if (cmp->traceFlags >> RPOS & 1)
       printf("Recycling dictionary...\n");
 
-   DestroyCodeSet(cmp->cst);
+   destroyCodeData(cmp);
    LZWCmpDestruct(cmp);
    LZWCmpInit(cmp, cmp->sink, cmp->sinkState, cmp->recycleCode, 
     cmp->traceFlags);
@@ -146,7 +155,7 @@ static void dictionaryReset(LZWCmp *cmp) {
    cmp->bitsUsed = saveBitsUsed;
 }
 
-// handles most frequent trace flag options. LZWCmp |*cmp| is needed for 
+// Handles most verbose trace flag options. LZWCmp |*cmp| is needed for 
 // printing the BST and int |cNum| is the code sent to the sink
 static void traceFlagHandler(LZWCmp *cmp, int cNum) {
    if (cmp->traceFlags >> CPOS & 1)  
@@ -155,7 +164,7 @@ static void traceFlagHandler(LZWCmp *cmp, int cNum) {
       BSTPrint(cmp->root, cmp->cst);
 }
 
-// pack those bits into integers and send to sink
+// Pack those bits into integers and send to sink
 static void packBits(LZWCmp *cmp, int done) {
    int cNum = done ? EOD : cmp->curLoc->cNum;
 
@@ -192,7 +201,6 @@ static void reallocPcode(LZWCmp *cmp) {
    free(temp);
 }
 
-// Initialize the LZWCmp object
 void LZWCmpInit(LZWCmp *cmp, CodeSink sink, void *sinkState, int recycleCode,
  int traceFlags) {
    cmp->recycleCode = recycleCode;
@@ -257,11 +265,11 @@ void LZWCmpStop(LZWCmp *cmp) {
    }
    traceFlagHandler(cmp, EOD);
    packBits(cmp, 1);
-
-   DestroyCodeSet(cmp->cst);
+   destroyCodeData(cmp);
 }
 
 void LZWCmpDestruct(LZWCmp *cmp) {
+   DestroyCodeSet(cmp->cst);
    BSTDestroy(cmp->root);
    free(cmp->pCode.data);
 }

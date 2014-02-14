@@ -1,13 +1,3 @@
-/*
- ============================================================================
- Name        : CodeSets.c
- Author      : Kevin Navero
- Version     :
- Copyright   : 
- Description : Hello World in C, Ansi-style
- ============================================================================
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -122,12 +112,6 @@ void FreeCode(void *codeSet, int code) {
 void DestroyCodeSet(void *codeSet) {
    CodeSet *cs = codeSet;
    CodeEntry *runner = cs->codeList;
-
-   for (; runner - cs->codeList < cs->size; runner++) {
-      if (runner->calls > 0) {
-         free(runner->data);
-      }
-   }
    free(cs->codeList);
    free(cs);
 }
