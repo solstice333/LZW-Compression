@@ -62,42 +62,42 @@ if $testpack1; then
    ./a.out test1.in
    ./Compress test1.in
    echo -e "TEST1\n"
-   diff -bw test1.in.kZ test1.in.Z
+   diff -bw test1.in.K test1.in.Z
 fi
 
 if $testpack2; then 
    ./a.out test2.in
    ./Compress test2.in
    echo -e "TEST2\n"
-   diff -bw test2.in.kZ test2.in.Z
+   diff -bw test2.in.K test2.in.Z
 fi
 
 if $testpack3; then 
    ./a.out test3.in
    ./Compress test3.in
    echo -e "TEST3\n"
-   diff -bw test3.in.kZ test3.in.Z
+   diff -bw test3.in.K test3.in.Z
 fi
 
 if $testpack4; then 
    ./a.out test4.in
    ./Compress test4.in
    echo -e "TEST4\n"
-   diff -bw test4.in.kZ test4.in.Z
+   diff -bw test4.in.K test4.in.Z
 fi
 
 if $testpack5; then 
    ./a.out test5.in
    ./Compress test5.in
    echo -e "TEST5\n"
-   diff -bw test5.in.kZ test5.in.Z
+   diff -bw test5.in.K test5.in.Z
 fi
 
 if $testpack6; then 
    ./a.out test6.in
    ./Compress test6.in
    echo -e "TEST6\n"
-   diff -bw test6.in.kZ test6.in.Z
+   diff -bw test6.in.K test6.in.Z
 fi
 
 if $testspace; then 

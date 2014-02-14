@@ -10,7 +10,7 @@
 #define EOD 256
 #define NEWLINE 8
 #define OUTPUT_SIZE 128
-#define OUTPUT_EXT ".kZ"
+#define OUTPUT_EXT ".K"
 
 // 000t cbrs
 typedef enum Pos {

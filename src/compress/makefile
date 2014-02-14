@@ -3,7 +3,7 @@ FILES=CodeSet.c LZWCmp.c SmartAlloc.c Compress.c
 OBJ=CodeSet.o LZWCmp.o SmartAlloc.o Compress.o
 OUT=a.out
 FLAGS=-g
-TESTS=test*.out test*.in.kZ test*.in.Z
+TESTS=test*.out test*.in.K test*.in.Z
 
 all: build
 
