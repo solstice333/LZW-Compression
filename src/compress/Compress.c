@@ -78,8 +78,6 @@ int main(int argc, char **argv) {
    }
 
    // begin compressing each file and verbose output based on flag set
-   void (*fp)(void *, UInt, int) = Sink; 
-
    for (i = 0; i < numFiles; i++) {
       LZWCmp cmp;
 
