@@ -2,7 +2,7 @@
 
 # set to true if you want to test that category
 testTcbr=true  # tests -tcbr flag options
-testS=false    # tests -s flag option
+testS=true    # tests -s flag option
 testZ=true     # tests .Z compressed files
 
 lastTest=8     
