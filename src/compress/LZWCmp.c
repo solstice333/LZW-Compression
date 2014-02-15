@@ -239,7 +239,7 @@ void LZWCmpEncode(LZWCmp *cmp, UChar sym) {
       reallocPcode(cmp);
    cmp->pCode.data[cmp->pCode.size++] = sym;
 
-   TreeNode *explore = BSTSearchCode(cmp->pCode, cmp->cst, cmp->root); 
+   TreeNode *explore = BSTSearchCode(cmp->pCode, cmp->cst, cmp->curLoc); 
 
    if (explore) 
       cmp->curLoc = explore; 

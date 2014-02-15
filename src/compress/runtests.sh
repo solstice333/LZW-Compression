@@ -10,11 +10,11 @@ one=0; two=0; three=0; four=0; five=0; six=0
 
 # comment out the numbers you want to include in testing
 #one=1
-two=2
+#two=2
 #three=3
 #four=4
 #five=5
-six=6
+#six=6
 
 if $testTcbr; then
    for i in `seq 1 6`; do
