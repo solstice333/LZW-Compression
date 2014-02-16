@@ -10,29 +10,35 @@
 #define EOD 256
 #define NEWLINE 8
 #define OUTPUT_EXT_SIZE 3
-#define OUTPUT_EXT ".K"
+#define OUTPUT_EXT ".K" // TODO change this later
 
 // 000t cbrs
 typedef enum Pos {
    SPOS, RPOS, BPOS, CPOS, TPOS
 } Pos;
 
+// Config struct
+typedef struct Config {
+   FILE *ofs;
+   int occur;
+} Config;
+
 // data sink writes out to file and does pretty printing
 void Sink(void *state, UInt code, int done) {
-   static int occur = 0;
+   Config *config = state;
 
-   if (occur == NEWLINE - 1) {
-      fprintf(state, "%08X\n", code);
-      occur = 0;
+   if (config->occur == NEWLINE - 1) {
+      fprintf(config->ofs, "%08X\n", code);
+      config->occur = 0;
    }
    else {
-      fprintf(state, "%08X ", code);
-      ++occur;
+      fprintf(config->ofs, "%08X ", code);
+      ++config->occur;
    }
 
    if (done) {
-      fprintf(state, "\n");
-      fclose(state);
+      fprintf(config->ofs, "\n");
+      fclose(config->ofs);
    }
 }
 
@@ -86,10 +92,11 @@ int main(int argc, char **argv) {
       char *output = malloc(num*sizeof(char));
       strcpy(output, files[i]);
       strcat(output, OUTPUT_EXT);
-      FILE *state = fopen(output, "w");    
+      FILE *ofs = fopen(output, "w");    
+      Config state = { ofs, 0 };
 
       // intiialize LZWcmp object and open input stream
-      LZWCmpInit(&cmp, Sink, state, RECYCLE_CODE, traceFlags);
+      LZWCmpInit(&cmp, Sink, &state, RECYCLE_CODE, traceFlags);
       FILE *ifs = fopen(files[i], "r");
       
       // The following block checks ahead to see if the feof indicator
