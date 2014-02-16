@@ -11,13 +11,13 @@ one=0; two=0; three=0; four=0; five=0; six=0; seven=0; eight=0
 
 # comment out the numbers you want to exclude from testing
 one=1
-two=2
+two=2    # large tcbr output (exclude this when running on vogon)
 three=3
 four=4
 five=5
-six=6
+six=6    # large tcbr output (exclude this when running on vogon)
 seven=7
-eight=8
+eight=8  # large tcbr output (exclude this when running on vogon)
 
 if $testTcbr; then
    for i in `seq 1 $lastTest`; do
