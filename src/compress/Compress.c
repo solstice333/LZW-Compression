@@ -43,15 +43,16 @@ void Sink(void *state, UInt code, int done) {
 }
 
 int main(int argc, char **argv) {
-   int numFiles = -1;
+   int numFiles = 0;
    char traceFlags = 0; // 000t cbrs
 
    // Set the flags while obtaining the size of how many files are to be 
    // compressed
-   int i = 0, j;
+   int i = 1, j, lock = 1, lockAtIndex = 0;
+
    for (; i < argc; i++) {
       j = 0;
-      if (argv[i][j++] == '-') {
+      if (argv[i][j++] == '-' && lock) {
          for (; argv[i][j]; j++) {
             if (argv[i][j] == 't') 
                traceFlags |= 1 << TPOS; 
@@ -72,20 +73,29 @@ int main(int argc, char **argv) {
                printf("Bad argument: %c\n", argv[i][j]);
          }
       }
+      else if (lock && !lockAtIndex) {
+         lock = 0;
+         lockAtIndex = i;
+         numFiles++;
+      }
       else 
          numFiles++;
    }
 
    // put all the filenames into the |files| container
    char *files[numFiles]; 
-   for (i = 1, j = 0; i < argc; i++) {
-      if (argv[i][0] != '-') 
-         files[j++] = argv[i];
-   }
+   for (i = lockAtIndex, j = 0; i < argc; i++)
+      files[j++] = argv[i];
 
-   // begin compressing each file and verbose output based on flag set
+   // begin compressing each valid file and verbose output based on flag set
+   LZWCmp cmp;
    for (i = 0; i < numFiles; i++) {
-      LZWCmp cmp;
+      // open input stream
+      FILE *ifs = fopen(files[i], "r");
+      if (!ifs) {
+         printf("Cannot open %s\n", files[i]);
+         continue;
+      }
 
       // set up output stream 
       int num = strlen(files[i]) + OUTPUT_EXT_SIZE;
@@ -95,9 +105,8 @@ int main(int argc, char **argv) {
       FILE *ofs = fopen(output, "w");    
       Config state = { ofs, 0 };
 
-      // intiialize LZWcmp object and open input stream
+      // initialize LZWCmp object
       LZWCmpInit(&cmp, Sink, &state, RECYCLE_CODE, traceFlags);
-      FILE *ifs = fopen(files[i], "r");
       
       // The following block checks ahead to see if the feof indicator
       // has been set since we don't want stuff like |10 255| to be added
@@ -119,13 +128,13 @@ int main(int argc, char **argv) {
           files[i], report_space()); 
 
       LZWCmpDestruct(&cmp);
-      LZWCmpClearFreelist();
       fclose(ifs);
       free(output);
-
-      if (cmp.traceFlags >> SPOS & 1)
-         printf("Final space: %ld\n", report_space()); 
    }
+
+   LZWCmpClearFreelist();
+   if (cmp.traceFlags >> SPOS & 1)
+      printf("Final space: %ld\n", report_space()); 
 
    return 0;
 }

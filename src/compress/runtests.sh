@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # set to true if you want to test that category
-testTcbr=true  # tests -tcbr flag options
-testS=true     # tests -s flag option
-testZ=true     # tests .Z compressed files
+testTcbr=false  # tests -tcbr flag options
+testS=false     # tests -s flag option
+testZ=false     # tests .Z compressed files
+testCrazy=true
 
 lastTest=8     
 kout="k.out"   
@@ -24,7 +25,7 @@ if $testTcbr; then
       if [ $i -eq $one -o $i -eq $two -o $i -eq $three -o $i -eq $four -o $i -eq $five -o $i -eq $six -o $i -eq $seven -o $i -eq $eight ]; then
          ./a.out -tcbr test$i.in > test$i$kout
          ./Compress -tcbr test$i.in > test$i.out
-         echo -e "TEST$i -tcbr flags\n"
+         echo -e "\nTEST$i -tcbr flags\n"
          diff test$i$kout test$i.out
       fi
    done
@@ -35,7 +36,7 @@ if $testS; then
       if [ $i -eq $one -o $i -eq $two -o $i -eq $three -o $i -eq $four -o $i -eq $five -o $i -eq $six -o $i -eq $seven -o $i -eq $eight ]; then
          ./a.out -s test$i.in > test$i$kout
          ./Compress -s test$i.in > test$i.out
-         echo -e "TEST$i -s flags\n"
+         echo -e "\nTEST$i -s flags\n"
          diff test$i$kout test$i.out
       fi
    done
@@ -46,13 +47,41 @@ if $testZ; then
       if [ $i -eq $one -o $i -eq $two -o $i -eq $three -o $i -eq $four -o $i -eq $five -o $i -eq $six -o $i -eq $seven -o $i -eq $eight ]; then
          ./a.out test$i.in 
          ./Compress test$i.in
-         echo -e "TEST$i .Z compressed files\n"
+         echo -e "\nTEST$i .Z compressed files\n"
          diff test$i.in.K test$i.in.Z
       fi
    done
 fi
 
-echo -e "Checking if tests are the same as original..."
+if $testCrazy; then
+   i=1; j=2
+   ./a.out -srr -bss test$i.in test$j.in > test$i$kout
+   ./Compress -srr -bss test$i.in test$j.in > test$i.out
+   echo -e "\nTEST$i and TEST$j duplicates, two follow up dashes, multiple filenames"
+   echo -e "Output file in test$i$kout test$i.out\n"
+   diff test$i$kout test$i.out
+   diff test$i.in.K test$i.in.Z
+   diff test$j.in.K test$j.in.Z
+fi
+
+if $testCrazy; then
+   i=3; j=4
+   ./a.out -s test$i.in -b test$j.in> test$i$kout
+   ./Compress -s test$i.in -b test$j.in > test$i.out
+   echo -e "\nTEST$i and TEST$j flag in between filenames"
+   echo -e "Output file in test$i$kout test$i.out\n"
+   diff test$i$kout test$i.out
+fi
+
+if $testCrazy; then
+   i=5
+   ./a.out -srrr -rssd -bb test$i.in > test$i$kout
+   ./Compress -srrr -rssd -bb test$i.in > test$i.out
+   echo -e "\nTEST$i crazy flag options\n"
+   diff test$i$kout test$i.out
+fi
+
+echo -e "\n\nChecking if tests are the same as original..."
 
 echo -e "Checking Compress..."
 if [ -e Compress ]; then
