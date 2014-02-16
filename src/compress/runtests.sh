@@ -2,7 +2,7 @@
 
 # set to true if you want to test that category
 testTcbr=true  # tests -tcbr flag options
-testS=true    # tests -s flag option
+testS=true     # tests -s flag option
 testZ=true     # tests .Z compressed files
 
 lastTest=8     
@@ -51,4 +51,64 @@ if $testZ; then
       fi
    done
 fi
+
+echo -e "Checking if tests are the same as original..."
+
+echo -e "Checking Compress..."
+if [ -e Compress ]; then
+   diff Compress originalCompressTests/Compress
+fi
+
+echo -e "Checking test#.in.Z..."
+if [ -e test1.in.Z ]; then
+   diff test1.in.Z originalCompressTests/test1.in.Z
+fi
+
+if [ -e test2.in.Z ]; then
+   diff test2.in.Z originalCompressTests/test2.in.Z
+fi
+
+if [ -e test3.in.Z ]; then
+   diff test3.in.Z originalCompressTests/test3.in.Z
+fi
+
+if [ -e test4.in.Z ]; then
+   diff test4.in.Z originalCompressTests/test4.in.Z
+fi
+
+echo -e "Checking test#.in..."
+if [ -e test1.in ]; then
+   diff test1.in originalCompressTests/test1.in
+fi
+
+if [ -e test2.in ]; then
+   diff test2.in originalCompressTests/test2.in
+fi
+
+if [ -e test3.in ]; then
+   diff test3.in originalCompressTests/test3.in
+fi
+
+if [ -e test4.in ]; then
+   diff test4.in originalCompressTests/test4.in
+fi
+
+echo -e "Checking test#.out..."
+if $testS -a [ -e test1.out ]; then
+   diff test1.out originalCompressTests/test1.out
+fi
+
+if $testS -a [ -e test2.out ]; then
+   diff test2.out originalCompressTests/test2.out
+fi
+
+if $testS -a [ -e test3.out ]; then
+   diff test3.out originalCompressTests/test3.out
+fi
+
+if $testS -a [ -e test4.out ]; then
+   diff test4.out originalCompressTests/test4.out
+fi
+
+echo -e "Done!"
 
