@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # set to true if you want to test that category
-testTcbr=false  # tests -tcbr flag options
-testS=false     # tests -s flag option
-testZ=false     # tests .Z compressed files
+testTcbr=true  # tests -tcbr flag options
+testS=true     # tests -s flag option
+testZ=true     # tests .Z compressed files
 testCrazy=true
 
 lastTest=8     
@@ -51,34 +51,6 @@ if $testZ; then
          diff test$i.in.K test$i.in.Z
       fi
    done
-fi
-
-if $testCrazy; then
-   i=1; j=2
-   ./a.out -srr -bss test$i.in test$j.in > test$i$kout
-   ./Compress -srr -bss test$i.in test$j.in > test$i.out
-   echo -e "\nTEST$i and TEST$j duplicates, two follow up dashes, multiple filenames"
-   echo -e "Output file in test$i$kout test$i.out\n"
-   diff test$i$kout test$i.out
-   diff test$i.in.K test$i.in.Z
-   diff test$j.in.K test$j.in.Z
-fi
-
-if $testCrazy; then
-   i=3; j=4
-   ./a.out -s test$i.in -b test$j.in> test$i$kout
-   ./Compress -s test$i.in -b test$j.in > test$i.out
-   echo -e "\nTEST$i and TEST$j flag in between filenames"
-   echo -e "Output file in test$i$kout test$i.out\n"
-   diff test$i$kout test$i.out
-fi
-
-if $testCrazy; then
-   i=5
-   ./a.out -srrr -rssd -bb test$i.in > test$i$kout
-   ./Compress -srrr -rssd -bb test$i.in > test$i.out
-   echo -e "\nTEST$i crazy flag options\n"
-   diff test$i$kout test$i.out
 fi
 
 echo -e "\n\nChecking if tests are the same as original..."
@@ -140,4 +112,32 @@ if $testS -a [ -e test4.out ]; then
 fi
 
 echo -e "Done!"
+
+if $testCrazy; then
+   i=1; j=2
+   ./a.out -srr -bss test$i.in test$j.in > test$i$kout
+   ./Compress -srr -bss test$i.in test$j.in > test$i.out
+   echo -e "\nTEST$i and TEST$j duplicates, two follow up dashes, multiple filenames"
+   echo -e "Output file in test$i$kout test$i.out\n"
+   diff test$i$kout test$i.out
+   diff test$i.in.K test$i.in.Z
+   diff test$j.in.K test$j.in.Z
+fi
+
+if $testCrazy; then
+   i=3; j=4
+   ./a.out -s test$i.in -b test$j.in> test$i$kout
+   ./Compress -s test$i.in -b test$j.in > test$i.out
+   echo -e "\nTEST$i and TEST$j flag in between filenames"
+   echo -e "Output file in test$i$kout test$i.out\n"
+   diff test$i$kout test$i.out
+fi
+
+if $testCrazy; then
+   i=5
+   ./a.out -srrr -rssd -bb test$i.in > test$i$kout
+   ./Compress -srrr -rssd -bb test$i.in > test$i.out
+   echo -e "\nTEST$i crazy flag options\n"
+   diff test$i$kout test$i.out
+fi
 
