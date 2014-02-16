@@ -4,7 +4,7 @@
 testTcbr=true  # tests -tcbr flag options
 testS=true     # tests -s flag option
 testZ=true     # tests .Z compressed files
-testCrazy=true
+testCrazy=true # tests some crazy flag options that no one would ever do
 
 lastTest=8     
 kout="k.out"   
