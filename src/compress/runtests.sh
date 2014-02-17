@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # set to true if you want to test that category
-testTcbr=true  # tests -tcbr flag options
-testS=true     # tests -s flag option
-testZ=true     # tests .Z compressed files
-testCrazy=true # tests some crazy flag options that no one would ever do
+testTcbr=false  # tests -tcbr flag options
+testS=false     # tests -s flag option
+testZ=false     # tests .Z compressed files
+testCrazy=false # tests some crazy flag options that no one would ever do
 testWithStaleyCompress=true   # tests with Staley's Compress.o
 
 lastTest=9     
@@ -171,5 +171,10 @@ if $testWithStaleyCompress; then
    echo -e "testing -s"
    ./a.out -s test2.in > test2k.out
    ./Compress -s test2.in > test2.out
+   diff test2k.out test2.out
+
+   echo -e "testing crazy"
+   ./a.out -brss -ttcs test2.in -ssr test3.in > test2k.out
+   ./Compress -brss -ttcs test2.in -ssr test3.in > test2.out
    diff test2k.out test2.out
 fi
