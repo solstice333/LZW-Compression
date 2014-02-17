@@ -10,8 +10,8 @@ TESTS=test*.out test*.in.K test*.in.Z
 all: build
 
 build: $(OBJ) $(COMPRESS)
-	$(CC) $(FLAGS) $(OBJ) $(COMPRESS)
-	#$(CC) $(FLAGS) $(OBJ) $(STRESS) 
+	#$(CC) $(FLAGS) $(OBJ) $(COMPRESS)
+	$(CC) $(FLAGS) $(OBJ) $(STRESS) 
 
 CodeSet.o: CodeSet.c
 	$(CC) -c CodeSet.c
