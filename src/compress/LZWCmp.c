@@ -14,7 +14,7 @@
 #define DEBUG 0
 
 typedef enum Pos {
-   SPOS, RPOS, BPOS, CPOS, TPOS
+   TPOS, BPOS, RPOS, CPOS, SPOS
 } Pos;
 
 // freelist contains recycled nodes

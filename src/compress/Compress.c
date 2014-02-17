@@ -14,7 +14,7 @@
 
 // 000t cbrs
 typedef enum Pos {
-   SPOS, RPOS, BPOS, CPOS, TPOS
+   TPOS, BPOS, RPOS, CPOS, SPOS
 } Pos;
 
 // Config struct
