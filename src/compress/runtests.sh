@@ -149,9 +149,9 @@ if $testWithStaleyCompress; then
    ./makeWithStaleyCompress.sh
 
    echo -e "testing -t"
-   ./a.out -t test2.in > test2k.out
-   ./Compress -t test2.in > test2.out
-   diff test2k.out test2.out
+   ./a.out -t test4.in > test4k.out
+   ./Compress -t test4.in > test4.out
+   diff test4k.out test4.out
 
    echo -e "testing -c"
    ./a.out -c test2.in > test2k.out
@@ -174,7 +174,7 @@ if $testWithStaleyCompress; then
    diff test2k.out test2.out
 
    echo -e "testing crazy"
-   ./a.out -brss -ttcs test2.in -ssr test3.in > test2k.out
-   ./Compress -brss -ttcs test2.in -ssr test3.in > test2.out
+   ./a.out -brss -rcs test2.in -cssr test4.in > test2k.out
+   ./Compress -brss -rcs test2.in -cssr test4.in > test2.out
    diff test2k.out test2.out
 fi
