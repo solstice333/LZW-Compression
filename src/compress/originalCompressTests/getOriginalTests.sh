@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cp ~grade_cstaley/357/Compress/tests/* .
+scp knavero@vogon.csc.calpoly.edu:~grade_cstaley/357/Compress/\{tests/*,Compress.o\} .
