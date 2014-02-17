@@ -111,7 +111,6 @@ void FreeCode(void *codeSet, int code) {
 
 void DestroyCodeSet(void *codeSet) {
    CodeSet *cs = codeSet;
-   CodeEntry *runner = cs->codeList;
    free(cs->codeList);
    free(cs);
 }

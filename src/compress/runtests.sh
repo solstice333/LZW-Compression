@@ -3,6 +3,8 @@
 # set to true if you want to test that category
 testTcbrsZ=true  # tests -tcbrs flag options and compressed output
 testCrazy=true # tests some crazy flag options that no one would ever do
+
+# won't work on 64 bit machines
 testWithStaleyCompress=true   # tests with Staley's Compress.o
 
 lastTest=9     
