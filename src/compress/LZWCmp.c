@@ -184,8 +184,10 @@ static void packBits(LZWCmp *cmp, int done) {
          printf("Bump numBits to %d\n", cmp->numBits);
    }
 
-   if (done)
-      cmp->sink(cmp->sinkState, cmp->nextInt, done);
+   if (done) {
+      cmp->sink(cmp->sinkState, cmp->nextInt, 0);
+      cmp->sink(cmp->sinkState, 0, done);
+   }
 }
 
 // Used for reallocating cmp->pCode.data since realloc 

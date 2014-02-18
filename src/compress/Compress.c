@@ -10,7 +10,7 @@
 #define EOD 256
 #define NEWLINE 8
 #define OUTPUT_EXT_SIZE 3
-#define OUTPUT_EXT ".K" // TODO change to .Z later 
+#define OUTPUT_EXT ".Z"
 
 // 000t cbrs
 typedef enum Pos {
@@ -26,19 +26,19 @@ typedef struct Config {
 // data sink writes out to file and does pretty printing
 void Sink(void *state, UInt code, int done) {
    Config *config = state;
-
-   if (config->occur == NEWLINE - 1) {
-      fprintf(config->ofs, "%08X\n", code);
-      config->occur = 0;
-   }
-   else {
-      fprintf(config->ofs, "%08X ", code);
-      ++config->occur;
-   }
-
    if (done) {
       fprintf(config->ofs, "\n");
       fclose(config->ofs);
+   }
+   else {
+      if (config->occur == NEWLINE - 1) {
+         fprintf(config->ofs, "%08X\n", code);
+         config->occur = 0;
+      }
+      else {
+         fprintf(config->ofs, "%08X ", code);
+         ++config->occur;
+      }
    }
 }
 
@@ -107,20 +107,21 @@ int main(int argc, char **argv) {
 
       // initialize LZWCmp object
       LZWCmpInit(&cmp, Sink, &state, RECYCLE_CODE, traceFlags);
-      
+
+      // TODO apparently benchmark Compress.o calls one less
       // The following block checks ahead to see if the feof indicator
       // has been set since we don't want stuff like |10 255| to be added
       // to the dictionary at the EOF (where 255 is unsigned EOF). 
       // If feof has not been set, return to old pos, and 
       // send the character to Encoder
-      char c = 0;
-      LZWCmpEncode(&cmp, fgetc(ifs));
-      c = fgetc(ifs);
-      while (!feof(ifs)) {
-         LZWCmpEncode(&cmp, c);
-         c = fgetc(ifs);
-      }
+      char oneStep = 0;
 
+      LZWCmpEncode(&cmp, fgetc(ifs));
+      oneStep = fgetc(ifs);
+      while (!feof(ifs)) {
+         LZWCmpEncode(&cmp, oneStep);
+         oneStep = fgetc(ifs);
+      }
       LZWCmpStop(&cmp);
 
       if (cmp.traceFlags >> SPOS & 1)

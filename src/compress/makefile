@@ -4,7 +4,7 @@ OBJ=CodeSet.o LZWCmp.o SmartAlloc.o
 COMPRESS=Compress.o
 STRESS=Stress.o
 OUT=a.out
-FLAGS=-g -Wall
+FLAGS=-g #-Wall
 TESTS=test*.out test*.in.K test*.in.Z
 
 all: build
